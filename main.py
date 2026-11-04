@@ -48,7 +48,6 @@ BOT_TOKEN = os.getenv("BOT_TOKEN", "YOUR_BOT_TOKEN_HERE")
 bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher()
 
-# Foydalanuvchilarning vaqtinchalik holatlari (Session storage)
 user_sessions = {}
 
 # --- BAZA ---
@@ -158,7 +157,6 @@ def get_text(user_id, key):
     lang = get_user_lang(user_id) or 'uz_lat'
     return TRANSLATIONS.get(lang, TRANSLATIONS['uz_lat']).get(key, "")
 
-# --- KLAVIATURALAR ---
 def lang_keyboard():
     builder = InlineKeyboardBuilder()
     builder.button(text="🇺🇿 O'zbekcha", callback_data="lang:uz_lat")
@@ -187,7 +185,6 @@ def action_keyboard(user_id):
     builder.adjust(2)
     return builder.as_markup(resize_keyboard=True)
 
-# --- /START ---
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message):
     user_id = message.from_user.id
@@ -208,7 +205,6 @@ async def process_lang(callback: types.CallbackQuery):
     await callback.message.answer(get_text(user_id, 'welcome'), reply_markup=main_menu_keyboard(user_id))
     await callback.answer()
 
-# --- MENYU TANLOVLARI ---
 @dp.message(F.text.in_({TRANSLATIONS[l]['img_to_pdf'] for l in TRANSLATIONS}))
 async def menu_img_to_pdf(message: types.Message):
     user_id = message.from_user.id
@@ -233,7 +229,6 @@ async def menu_cancel(message: types.Message):
     user_sessions[user_id] = {'mode': None, 'files': []}
     await message.answer(get_text(user_id, 'welcome'), reply_markup=main_menu_keyboard(user_id))
 
-# --- "✅ TAYYOR" TUGMASI BOSILGANDA ---
 @dp.message(F.text.in_({TRANSLATIONS[l]['ready'] for l in TRANSLATIONS}))
 async def menu_ready(message: types.Message):
     user_id = message.from_user.id
@@ -255,7 +250,10 @@ async def menu_ready(message: types.Message):
             await message.answer_document(types.FSInputFile(pdf_path), caption="✅ Rasmlardan PDF tayyor!")
             os.remove(pdf_path)
         for f in files:
-            try: os.remove(f) except: pass
+            try:
+                os.remove(f)
+            except Exception:
+                pass
 
     elif mode == 'pdf_merge':
         merger = PdfMerger()
@@ -267,12 +265,14 @@ async def menu_ready(message: types.Message):
         await message.answer_document(types.FSInputFile(merged_path), caption="✅ PDF fayllar birlashtirildi!")
         os.remove(merged_path)
         for f in files:
-            try: os.remove(f) except: pass
+            try:
+                os.remove(f)
+            except Exception:
+                pass
 
     user_sessions[user_id] = {'mode': None, 'files': []}
     await message.answer(get_text(user_id, 'welcome'), reply_markup=main_menu_keyboard(user_id))
 
-# --- RASMLARNI QABUL QILISH VA TAHRIRLASH ---
 @dp.message(F.photo)
 async def handle_photo(message: types.Message):
     user_id = message.from_user.id
@@ -290,10 +290,7 @@ async def handle_photo(message: types.Message):
         await message.answer(f"📥 Rasm qo'shildi ({len(session['files'])} ta). Yana yuboring yoki '✅ Tayyor'ni bosing.")
     
     elif mode == 'edit_image':
-        # Rasm tiniqlashtirish, fon va piksellarini to'g'irlash
         img = Image.open(file_path).convert('RGB')
-        
-        # Tiniqlashtirish (Sharpen & Enhance contrast)
         enhancer = ImageEnhance.Contrast(img)
         img_enhanced = enhancer.enhance(1.3)
         img_sharpened = img_enhanced.filter(ImageFilter.SHARPEN)
@@ -309,7 +306,6 @@ async def handle_photo(message: types.Message):
         os.remove(file_path)
         os.remove(out_path)
     else:
-        # Odatiy rasm yuborilsa ham avtomatik tiniqlashtirib berish
         img = Image.open(file_path).convert('RGB')
         img_sharpened = img.filter(ImageFilter.SHARPEN)
         out_path = f"downloads/fixed_{user_id}.jpg"
@@ -318,7 +314,6 @@ async def handle_photo(message: types.Message):
         os.remove(file_path)
         os.remove(out_path)
 
-# --- HUJJATLARNI QABUL QILISH (WORD, EXCEL, PDF) ---
 @dp.message(F.document)
 async def handle_document(message: types.Message):
     user_id = message.from_user.id
@@ -338,7 +333,6 @@ async def handle_document(message: types.Message):
         return
 
     try:
-        # 1. WORD (.docx) ➡️ PDF
         if file_name.endswith('.docx'):
             pdf_path = input_path.rsplit('.', 1)[0] + ".pdf"
             doc_file = Document(input_path)
@@ -355,7 +349,6 @@ async def handle_document(message: types.Message):
             await message.answer_document(types.FSInputFile(pdf_path), caption="✅ Word fayl PDF formatiga o'tkazildi!")
             os.remove(pdf_path)
 
-        # 2. EXCEL (.xlsx) ➡️ PDF
         elif file_name.endswith('.xlsx'):
             pdf_path = input_path.rsplit('.', 1)[0] + ".pdf"
             wb = openpyxl.load_workbook(input_path)
@@ -374,7 +367,6 @@ async def handle_document(message: types.Message):
             await message.answer_document(types.FSInputFile(pdf_path), caption="✅ Excel fayl PDF formatiga o'tkazildi!")
             os.remove(pdf_path)
 
-        # 3. PDF ➡️ WORD (.docx)
         elif file_name.endswith('.pdf'):
             docx_path = input_path.rsplit('.', 1)[0] + ".docx"
             reader = PdfReader(input_path)

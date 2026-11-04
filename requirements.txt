@@ -1,0 +1,6 @@
+aiogram
+reportlab
+Pillow
+python-docx
+openpyxl
+aiohttp

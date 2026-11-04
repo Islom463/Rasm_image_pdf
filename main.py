@@ -13,7 +13,13 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 from docx import Document
 import openpyxl
-from pypdf import PdfMerger, PdfReader
+
+# Xavfsiz PDF importlari (xatolik bermasligi uchun)
+try:
+    from pypdf import PdfMerger, PdfReader
+except ImportError:
+    from PyPDF2 import PdfMerger, PdfReader
+
 from aiohttp import web
 import urllib.request
 import threading

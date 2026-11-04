@@ -3,4 +3,5 @@ reportlab
 Pillow
 python-docx
 openpyxl
+pypdf
 aiohttp

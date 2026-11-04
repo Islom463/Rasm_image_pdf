@@ -33,12 +33,12 @@ def self_ping():
     while True:
         time.sleep(300)
         try:
-            app_url = os.environ.get("RENDER_EXTERNAL_URL") or f"http://127.0.0.1:{os.environ.get('PORT', 8080)}"
+            app_url = os.getenv("RENDER_EXTERNAL_URL") or f"http://127.0.0.1:{os.environ.get('PORT', 8080)}"
             urllib.request.urlopen(app_url, timeout=20)
         except Exception:
             pass
 
-threading.Thread(target=self_ping, daemon=True).start()
+# threading.Thread(target=self_ping, daemon=True).start()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN", "YOUR_BOT_TOKEN_HERE")
 bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
@@ -79,19 +79,19 @@ def set_user_lang(user_id, lang, name="User"):
 TRANSLATIONS = {
     'uz_lat': {
         'choose_lang': "🌐 Iltimos, interfeys tilini tanlang:",
-        'welcome': "👋 Assalomu alaykum! Botimizga xush kelibsiz. Kerakli xizmatni tanlang[span_4](start_span)[span_4](end_span):",
+        'welcome': "👋 Assalomu alaykum! Botimizga xush kelibsiz. Kerakli xizmatni tanlang:",
         'img_to_pdf': "🖼 Rasm ➡️ PDF",
         'pdf_to_img': "📄 PDF ➡️ Rasm",
         'word_to_pdf': "📝 WORD ➡️ PDF",
         'pdf_to_word': "📁 PDF ➡️ WORD",
         'excel_to_pdf': "📊 EXCEL ➡️ PDF",
-        'pdf_merge': "🔗 PDF birlashtirish[span_5](start_span)[span_5](end_span)",
+        'pdf_merge': "🔗 PDF birlashtirish",
         'edit_image': "✨ Rasmni tahrirlash (Resize/Piksel)",
         'back': "⬅️ Orqaga",
-        'send_img': "📥 Rasmlarni yuboring. Tugatgach '✅ Tayyor'ni bosing[span_6](start_span)[span_6](end_span).",
+        'send_img': "📥 Rasmlarni yuboring. Tugatgach '✅ Tayyor'ni bosing.",
         'ready': "✅ Tayyor",
         'cancel': "❌ Bekor qilish",
-        'resize_info': "📐 Rasm hajmini (piksellarini) o‘zgartirish uchun rasmni yuboring va yangi o'lchamni yuboring (masalan: 800x600)."
+        'resize_info': "📐 Rasm hajmini (piksellarini) o‘zgartirish uchun rasmni yuboring."
     },
     'uz_cyr': {
         'choose_lang': "🌐 Илтимос, тилни танланг:",
@@ -111,7 +111,7 @@ TRANSLATIONS = {
     },
     'ru': {
         'choose_lang': "🌐 Пожалуйста, выберите язык:",
-        'welcome': "👋 Добро пожаловать! Выберите нужную услугу[span_7](start_span)[span_7](end_span):",
+        'welcome': "👋 Добро пожаловать! Выберите нужную услугу:",
         'img_to_pdf': "🖼 Картинка ➡️ PDF",
         'pdf_to_img': "📄 PDF ➡️ Картинка",
         'word_to_pdf': "📝 WORD ➡️ PDF",
@@ -120,7 +120,7 @@ TRANSLATIONS = {
         'pdf_merge': "🔗 Объединить PDF",
         'edit_image': "✨ Редактировать фото (Resize)",
         'back': "⬅️ Назад",
-        'send_img': "📥 Отправьте изображения. Нажмите '✅ Готово', когда закончите[span_8](start_span)[span_8](end_span).",
+        'send_img': "📥 Отправьте изображения. Нажмите '✅ Готово', когда закончите.",
         'ready': "✅ Готово",
         'cancel': "❌ Отмена",
         'resize_info': "📐 Отправьте фото для изменения размера."
@@ -188,7 +188,7 @@ async def process_lang(callback: types.CallbackQuery):
     await callback.message.answer(get_text(user_id, 'welcome'), reply_markup=main_menu_keyboard(user_id))
     await callback.answer()
 
-# --- MENYU TUGMALARI BO'YICHA AMALLAR ---
+# --- MENYU TUGMALARI ---
 @dp.message(F.text.in_({
     TRANSLATIONS['uz_lat']['img_to_pdf'], TRANSLATIONS['uz_cyr']['img_to_pdf'], 
     TRANSLATIONS['ru']['img_to_pdf'], TRANSLATIONS['en']['img_to_pdf']
@@ -228,11 +228,9 @@ async def handle_photo(message: types.Message):
     file_path = f"downloads/{user_id}_{photo.file_unique_id}.jpg"
     await bot.download_file(file.file_path, file_path)
 
-    # Odatiy holatda rasm o'lchamini ikki barobar kichraytirish yoki tahrirlash namunasi
     img = Image.open(file_path)
     width, height = img.size
     
-    # Piksellarini va o'lchamini to'g'irlab, foydalanuvchiga yuborish
     resized_path = f"downloads/resized_{user_id}.jpg"
     img.resize((width // 2, height // 2)).save(resized_path)
 
@@ -250,4 +248,4 @@ async def main():
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
-    asyncio.run(main))
+    asyncio.run(main())

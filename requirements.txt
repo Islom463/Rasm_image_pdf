@@ -1,8 +1,9 @@
-aiogram
+aiogram>=3.7,<4
+aiohttp
 reportlab
 Pillow
 python-docx
 openpyxl
 pypdf
-PyPDF2
-aiohttp
+python-pptx
+pymupdf
